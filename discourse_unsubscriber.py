@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # pylint: disable=
 """
-license: ISC
-author: Simon Lundström simmel@soy.se
+    license: ISC
+    author: Simon Lundström simmel@soy.se
 """
 
 import argparse
@@ -62,6 +62,9 @@ def main():
         auto_commit=False,
         # We're running from multiple processes so we're "multithreaded"
         multithreading=True,
+        # Might be more readable if we need to do some disaster recovery?
+        # ¯\_(ツ)_/¯
+        serializer=persistqueue.serializers.json,
     )
     args.variant(queue)
 
