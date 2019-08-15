@@ -19,12 +19,16 @@ __url__ = "https://github.com/simmel/discourse_unsubscriber"
 
 def client(queue=None):
     "Parse mail, extract URL and submit to queue"
-    print(queue)
+    queue.put("a")
 
 
 def server(queue=None):
     "Read URL from queue, send to Discourse and retry for any HTTP errors"
-    print(queue)
+
+    while True:
+        url = queue.get()
+        print(url)
+        queue.task_done()
 
 
 def main():
