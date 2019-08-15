@@ -9,8 +9,9 @@ import argparse
 import sys
 from pathlib import Path
 
+import persistqueue
+import persistqueue.serializers.json
 import xdg
-from pqueue import Queue
 
 __version__ = "0.0.0"
 
@@ -55,8 +56,8 @@ def main():
 
     # Setup queue in the cache dir, should be persistent enough. At least
     # better than TMP
-    queue_file = Path(xdg.XDG_CACHE_HOME) / Path(sys.argv[0]).stem / "queue"
-    queue = Queue(queue_file)
+    queue_file = Path(xdg.XDG_CACHE_HOME) / Path(sys.argv[0]).stem
+    queue = persistqueue.UniqueQ(queue_file, auto_commit=False)
     args.variant(queue)
 
 

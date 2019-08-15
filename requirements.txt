@@ -1,0 +1,2 @@
+persist-queue>=0.4
+xdg>=4.0
