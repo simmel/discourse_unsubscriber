@@ -6,6 +6,7 @@
 """
 
 import argparse
+import signal
 import sys
 from pathlib import Path
 
@@ -34,6 +35,12 @@ def server(queue=None):
 
 def main():
     "main"
+
+    # Avoid that pesky KeyboardInterrupt
+    def sigint(_signal, _frame):
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, sigint)
     parser = argparse.ArgumentParser(
         description="Unsubscribe from Discourse threads easily"
     )
