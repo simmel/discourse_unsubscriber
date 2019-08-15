@@ -2,10 +2,6 @@
 
 Unsubscribe from Discourse threads from your mutt
 
-https://pypi.org/project/pqueue/
-vs.
-https://pypi.org/project/persist-queue/
-
 10r/min seems to be the limit. Investigate further.
 
 # --client
