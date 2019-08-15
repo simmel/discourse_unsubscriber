@@ -20,7 +20,7 @@ __url__ = "https://github.com/simmel/discourse_unsubscriber"
 
 def client(queue=None):
     "Parse mail, extract URL and submit to queue"
-    queue.put("a")
+    queue.put("\n".join(sys.stdin.readlines()).strip())
 
 
 def server(queue=None):
