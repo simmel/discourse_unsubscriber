@@ -6,18 +6,25 @@ author: Simon Lundström simmel@soy.se
 """
 
 import argparse
+import sys
+from pathlib import Path
+
+import xdg
+from pqueue import Queue
 
 __version__ = "0.0.0"
 
 __url__ = "https://github.com/simmel/discourse_unsubscriber"
 
 
-def client():
+def client(queue=None):
     "Parse mail, extract URL and submit to queue"
+    print(queue)
 
 
-def server():
+def server(queue=None):
     "Read URL from queue, send to Discourse and retry for any HTTP errors"
+    print(queue)
 
 
 def main():
@@ -42,7 +49,11 @@ def main():
     )
     args = parser.parse_args()
 
-    print(args.variant)
+    # Setup queue in the cache dir, should be persistent enough. At least
+    # better than TMP
+    queue_file = Path(xdg.XDG_CACHE_HOME) / Path(sys.argv[0]).stem / "queue"
+    queue = Queue(queue_file)
+    args.variant(queue)
 
 
 if __name__ == "__main__":
