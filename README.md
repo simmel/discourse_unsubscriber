@@ -13,4 +13,4 @@ Unsubscribe from Discourse threads from your mutt
 * [ ] Send to discourse
   * [ ] Follow the limits
   * [ ] Retry
-* [ ] Send to status queue
+* [X] Send to status queue
