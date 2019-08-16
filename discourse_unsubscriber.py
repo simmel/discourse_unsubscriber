@@ -6,6 +6,7 @@
 """
 
 import argparse
+import os
 import signal
 import sys
 from pathlib import Path
@@ -19,18 +20,25 @@ __version__ = "0.0.0"
 __url__ = "https://github.com/simmel/discourse_unsubscriber"
 
 
-def client(queue=None):
+def client(work=None, status=None):
     "Parse mail, extract URL and submit to queue"
-    queue.put("\n".join(sys.stdin.readlines()).strip())
+
+    newpid = os.fork()
+    if newpid == 0:
+        print("\033[H{}: {}".format(os.getpid(), status.get()))
+    else:
+        print("parent: {} child: {}".format(os.getpid(), newpid))
+        work.put("\n".join(sys.stdin.readlines()).strip())
 
 
-def server(queue=None):
+def server(work=None, status=None):
     "Read URL from queue, send to Discourse and retry for any HTTP errors"
 
     while True:
-        url = queue.get()
+        url = work.get()
         print(url)
-        queue.task_done()
+        work.task_done()
+        status.put("{} done".format(url))
 
 
 def main():
@@ -64,8 +72,10 @@ def main():
     # Setup queue in the cache dir, should be persistent enough. At least
     # better than TMP
     queue_path = Path(xdg.XDG_CACHE_HOME) / Path(sys.argv[0]).stem
-    queue = persistqueue.UniqueQ(
+    # Setup the work queue where we submit the work
+    work = persistqueue.UniqueQ(
         queue_path,
+        name="work",
         auto_commit=False,
         # We're running from multiple processes so we're "multithreaded"
         multithreading=True,
@@ -73,7 +83,18 @@ def main():
         # ¯\_(ツ)_/¯
         serializer=persistqueue.serializers.json,
     )
-    args.variant(queue)
+    # Setup the status queue where the server will submit the status of the API
+    # call
+    status = persistqueue.SQLiteQueue(
+        queue_path,
+        name="status",
+        # We're running from multiple processes so we're "multithreaded"
+        multithreading=True,
+        # Might be more readable if we need to do some disaster recovery?
+        # ¯\_(ツ)_/¯
+        serializer=persistqueue.serializers.json,
+    )
+    args.variant(work, status)
 
 
 if __name__ == "__main__":
