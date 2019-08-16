@@ -6,9 +6,12 @@
 """
 
 import argparse
+import email
 import os
 import signal
 import sys
+from email.header import decode_header
+from email.message import EmailMessage
 from pathlib import Path
 
 import persistqueue
@@ -23,12 +26,22 @@ __url__ = "https://github.com/simmel/discourse_unsubscriber"
 def client(work=None, status=None):
     "Parse mail, extract URL and submit to queue"
 
+    # Parse email and extract URL in List-Unsubscribe header
+    mail = email.message_from_file(sys.stdin, EmailMessage)
+    # Decode any RFC2047 encoding
+    decoded_header = decode_header(mail["List-Unsubscribe"])
+    # Make it a header again to get UTF-8 or latin1 encoding for free
+    # Also, force it to string and strip any whitespace
+    header_as_str = str(email.header.make_header(decoded_header)).strip()
+    # Remove any quoting like brackets
+    unsubscribe_url = email.utils.unquote(header_as_str)
+
     newpid = os.fork()
     if newpid == 0:
         print("\033[H{}: {}".format(os.getpid(), status.get()))
     else:
         print("parent: {} child: {}".format(os.getpid(), newpid))
-        work.put("\n".join(sys.stdin.readlines()).strip())
+        work.put(unsubscribe_url)
 
 
 def server(work=None, status=None):
