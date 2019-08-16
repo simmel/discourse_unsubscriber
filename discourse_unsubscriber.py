@@ -63,9 +63,9 @@ def main():
 
     # Setup queue in the cache dir, should be persistent enough. At least
     # better than TMP
-    queue_file = Path(xdg.XDG_CACHE_HOME) / Path(sys.argv[0]).stem
+    queue_path = Path(xdg.XDG_CACHE_HOME) / Path(sys.argv[0]).stem
     queue = persistqueue.UniqueQ(
-        queue_file,
+        queue_path,
         auto_commit=False,
         # We're running from multiple processes so we're "multithreaded"
         multithreading=True,
