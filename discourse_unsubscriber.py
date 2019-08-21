@@ -7,6 +7,7 @@
 
 import argparse
 import email
+import logging
 import os
 import signal
 import sys
@@ -57,6 +58,10 @@ def server(work=None, status=None):
 def main():
     "main"
 
+    log = logging.getLogger()
+    log.addHandler(logging.StreamHandler(sys.stdout))
+    log.setLevel(logging.INFO)
+
     # Avoid that pesky KeyboardInterrupt
     def sigint(_signal, _frame):
         sys.exit(0)
@@ -65,6 +70,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="Unsubscribe from Discourse threads easily"
     )
+    parser.add_argument("--debug", action="store_true", help="Enable debugging")
+
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--client",
@@ -81,6 +88,10 @@ def main():
         help="Start as a server",
     )
     args = parser.parse_args()
+
+    # Set log level
+    if args.debug:
+        log.setLevel(logging.DEBUG)
 
     # Setup queue in the cache dir, should be persistent enough. At least
     # better than TMP
