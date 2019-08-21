@@ -101,6 +101,9 @@ def main():
     status = persistqueue.SQLiteQueue(
         queue_path,
         name="status",
+        # Even though this is the default it won't auto ack until we set it to
+        # true.
+        auto_commit=True,
         # We're running from multiple processes so we're "multithreaded"
         multithreading=True,
         # Might be more readable if we need to do some disaster recovery?
