@@ -24,7 +24,7 @@ __version__ = "0.0.0"
 __url__ = "https://github.com/simmel/discourse_unsubscriber"
 
 
-def client(work=None, status=None):
+def client(work=None, status=None, log=None, args=None):
     "Parse mail, extract URL and submit to queue"
 
     # Parse email and extract URL in List-Unsubscribe header
@@ -37,20 +37,32 @@ def client(work=None, status=None):
     # Remove any quoting like brackets
     unsubscribe_url = email.utils.unquote(header_as_str)
 
-    newpid = os.fork()
-    if newpid == 0:
-        print("\033[H{}: {}".format(os.getpid(), status.get()))
-    else:
-        print("parent: {} child: {}".format(os.getpid(), newpid))
+    def print_status(args, status):
+        if args.debug:
+            log.debug("{}: {}".format(os.getpid(), status.get()))
+        else:
+            print("\033[H{}: {}".format(os.getpid(), status.get()))
+
+    def enqueue_work(work, unsubscribe_url):
         work.put(unsubscribe_url)
 
+    if not args.debug:
+        newpid = os.fork()
+        if newpid == 0:
+            print_status(args, status)
+        else:
+            enqueue_work(work, unsubscribe_url)
+    else:
+        enqueue_work(work, unsubscribe_url)
+        print_status(args, status)
 
-def server(work=None, status=None):
+
+def server(work=None, status=None, log=None, args=None):
     "Read URL from queue, send to Discourse and retry for any HTTP errors"
 
     while True:
         url = work.get()
-        print(url)
+        log.debug(url)
         work.task_done()
         status.put("{} done".format(url))
 
@@ -121,7 +133,7 @@ def main():
         # ¯\_(ツ)_/¯
         serializer=persistqueue.serializers.json,
     )
-    args.variant(work, status)
+    args.variant(work=work, status=status, log=log, args=args)
 
 
 if __name__ == "__main__":
