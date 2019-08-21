@@ -11,10 +11,12 @@ import logging
 import os
 import signal
 import sys
+import urllib
 from email.header import decode_header
 from email.message import EmailMessage
 from pathlib import Path
 
+import mechanize
 import persistqueue
 import persistqueue.serializers.json
 import xdg
@@ -22,6 +24,8 @@ import xdg
 __version__ = "0.0.0"
 
 __url__ = "https://github.com/simmel/discourse_unsubscriber"
+
+__app__ = Path(sys.argv[0]).stem
 
 
 def client(work=None, status=None, log=None, args=None):
@@ -60,11 +64,41 @@ def client(work=None, status=None, log=None, args=None):
 def server(work=None, status=None, log=None, args=None):
     "Read URL from queue, send to Discourse and retry for any HTTP errors"
 
+    log.info("Server running")
+    browser = mechanize.Browser()
+    # Discourse doesn't let robots visit /email but we're not a real robot,
+    # right?
+    browser.set_handle_robots(False)
+    if not args.debug:
+        browser.set_debug_http(True)
+        browser.set_debug_redirects(True)
+        browser.set_debug_responses(True)
+    browser.set_header(
+        "User-Agent",
+        # Admit our affiliation with Mechanize
+        "{name}/{version} (+{url}) WWW-Mechanize/{py_version}".format(
+            name=__app__, version=__version__, url=__url__, py_version=sys.version[:3]
+        ),
+    )
+
     while True:
         url = work.get()
         log.debug(url)
-        work.task_done()
-        status.put("{} done".format(url))
+        try:
+            response = browser.open(url)
+            log.debug(
+                "{code} {url}".format(code=response.getcode(), url=response.geturl())
+            )
+            browser.select_form(nr=0)
+            response = browser.submit()
+            log.debug(
+                "{code} {url}".format(code=response.getcode(), url=response.geturl())
+            )
+            work.task_done()
+            status.put("{} done".format(url))
+        except urllib.error.HTTPError as e:
+            log.debug(e.headers.as_string())
+            sys.exit(1)
 
 
 def main():

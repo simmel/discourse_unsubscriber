@@ -10,7 +10,7 @@ Unsubscribe from Discourse threads from your mutt
 * [X] Listen on the status queue and print status
 # --server
 * [X] Listen on the submit queue
-* [ ] Send to discourse
+* [X] Send to discourse
   * [ ] Follow the limits
-  * [ ] Retry
+  * [ ] Retry with https://github.com/jd/tenacity
 * [X] Send to status queue
