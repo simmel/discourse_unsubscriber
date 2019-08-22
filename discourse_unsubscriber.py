@@ -68,6 +68,7 @@ def server(work=None, status=None, log=None, args=None):
     browser = mechanize.Browser()
     # Discourse doesn't let robots visit /email but we're not a real robot,
     # right?
+    # pylint: disable=no-member
     browser.set_handle_robots(False)
     if args.debug:
         browser.set_debug_http(True)
@@ -86,6 +87,7 @@ def server(work=None, status=None, log=None, args=None):
         url = work.get()
         log.debug(url)
 
+        # pylint: disable=no-member
         response = browser.open(url)
         log.debug("{code} {url}".format(code=response.getcode(), url=response.geturl()))
         browser.select_form(nr=0)
