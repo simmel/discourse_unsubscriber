@@ -69,7 +69,7 @@ def server(work=None, status=None, log=None, args=None):
     # Discourse doesn't let robots visit /email but we're not a real robot,
     # right?
     browser.set_handle_robots(False)
-    if not args.debug:
+    if args.debug:
         browser.set_debug_http(True)
         browser.set_debug_redirects(True)
         browser.set_debug_responses(True)
