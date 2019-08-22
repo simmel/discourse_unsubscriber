@@ -11,6 +11,7 @@ Unsubscribe from Discourse threads from your mutt
 # --server
 * [X] Listen on the submit queue
 * [X] Send to discourse
-  * [ ] Follow the limits
-  * [ ] Retry with https://github.com/jd/tenacity
+  * [X] Follow the limits
+  * [X] Retry with https://github.com/jd/tenacity
+  * [ ] Find a better way to make sure it's only 10r/min.
 * [X] Send to status queue

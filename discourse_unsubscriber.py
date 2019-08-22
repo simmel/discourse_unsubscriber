@@ -11,7 +11,6 @@ import logging
 import os
 import signal
 import sys
-import urllib
 from email.header import decode_header
 from email.message import EmailMessage
 from pathlib import Path
@@ -20,6 +19,7 @@ import mechanize
 import persistqueue
 import persistqueue.serializers.json
 import xdg
+from tenacity import after_log, retry, wait_fixed
 
 __version__ = "0.0.0"
 
@@ -81,24 +81,21 @@ def server(work=None, status=None, log=None, args=None):
         ),
     )
 
-    while True:
+    @retry(wait=wait_fixed(10), after=after_log(log, logging.INFO))
+    def unsubscribe(work, status, log):
         url = work.get()
         log.debug(url)
-        try:
-            response = browser.open(url)
-            log.debug(
-                "{code} {url}".format(code=response.getcode(), url=response.geturl())
-            )
-            browser.select_form(nr=0)
-            response = browser.submit()
-            log.debug(
-                "{code} {url}".format(code=response.getcode(), url=response.geturl())
-            )
-            work.task_done()
-            status.put("{} done".format(url))
-        except urllib.error.HTTPError as e:
-            log.debug(e.headers.as_string())
-            sys.exit(1)
+
+        response = browser.open(url)
+        log.debug("{code} {url}".format(code=response.getcode(), url=response.geturl()))
+        browser.select_form(nr=0)
+        response = browser.submit()
+        log.debug("{code} {url}".format(code=response.getcode(), url=response.geturl()))
+        work.task_done()
+        status.put("{} done".format(url))
+
+    while True:
+        unsubscribe(work, status, log)
 
 
 def main():
