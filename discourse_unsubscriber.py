@@ -87,7 +87,7 @@ def server(work=None, status=None, log=None, args=None):
         url = work.get()
         log.debug(url)
 
-        # pylint: disable=no-member
+        # pylint: disable=no-member,assignment-from-none
         response = browser.open(url)
         log.debug("{code} {url}".format(code=response.getcode(), url=response.geturl()))
         browser.select_form(nr=0)
