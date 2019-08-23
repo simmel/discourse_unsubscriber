@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pylint: disable=
+# pylint: disable=ungrouped-imports
 """
     license: ISC
     author: Simon Lundström simmel@soy.se
