@@ -28,29 +28,36 @@ __url__ = "https://github.com/simmel/discourse_unsubscriber"
 __app__ = Path(sys.argv[0]).stem
 
 
-def client(work=None, status=None, log=None, args=None):
+def client(
+    *,  # pylint: disable=bad-continuation
+    work: persistqueue.UniqueQ,
+    status: persistqueue.SQLiteQueue,
+    log: logging.Logger,
+    args: argparse.Namespace,
+) -> None:
     "Parse mail, extract URL and submit to queue"
 
     # Parse email and extract URL in List-Unsubscribe header
     mail = email.message_from_file(sys.stdin, EmailMessage)
     # Decode any RFC2047 encoding
-    decoded_header = decode_header(mail["List-Unsubscribe"])
+    # I feel like this type error is out of my hands
+    decoded_header = decode_header(mail["List-Unsubscribe"])  # type: ignore
     # Make it a header again to get UTF-8 or latin1 encoding for free
     # Also, force it to string and strip any whitespace
     header_as_str = str(email.header.make_header(decoded_header)).strip()
     # Remove any quoting like brackets
     unsubscribe_url = email.utils.unquote(header_as_str)
 
-    def print_status(args, status):
+    def print_status(args: argparse.Namespace, status: persistqueue.SQLiteQueue):
         if args.debug:
             log.debug("{}: {}".format(os.getpid(), status.get()))
         else:
             print("\033[H{}: {}".format(os.getpid(), status.get()))
 
-    def enqueue_work(work, unsubscribe_url):
+    def enqueue_work(work: persistqueue.UniqueQ, unsubscribe_url: str):
         work.put(unsubscribe_url)
 
-    if not args.debug:
+    if args.debug is not None and not args.debug:
         newpid = os.fork()
         if newpid == 0:
             print_status(args, status)
@@ -61,7 +68,13 @@ def client(work=None, status=None, log=None, args=None):
         print_status(args, status)
 
 
-def server(work=None, status=None, log=None, args=None):
+def server(
+    *,  # pylint: disable=bad-continuation
+    work: persistqueue.UniqueQ,
+    status: persistqueue.SQLiteQueue,
+    log: logging.Logger,
+    args: argparse.Namespace,
+) -> None:
     "Read URL from queue, send to Discourse and retry for any HTTP errors"
 
     log.info("Server running")
@@ -83,7 +96,11 @@ def server(work=None, status=None, log=None, args=None):
     )
 
     @retry(wait=wait_fixed(10), after=after_log(log, logging.INFO))
-    def unsubscribe(work, status, log):
+    def unsubscribe(
+        work: persistqueue.UniqueQ,
+        status: persistqueue.SQLiteQueue,
+        log: logging.Logger,
+    ) -> None:
         url = work.get()
         log.debug(url)
 
