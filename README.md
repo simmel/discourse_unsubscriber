@@ -4,6 +4,8 @@ Unsubscribe from Discourse threads from your mutt
 
 10r/min seems to be the limit. Investigate further.
 
+* [X] Make loglevel WARNING or ERROR default
+* [X] Add verbose flag which uses INFO logging and log every URL we visit
 # --client
 * [X] Submit job to the submit queue
 * [X] Fork off

@@ -112,6 +112,7 @@ def server(
         log.debug("{code} {url}".format(code=response.getcode(), url=response.geturl()))
         work.task_done()
         status.put("{} done".format(url))
+        log.info("Unsubscribed {}".format(url))
 
     while True:
         unsubscribe(work, status, log)
@@ -122,7 +123,7 @@ def main():
 
     log = logging.getLogger()
     log.addHandler(logging.StreamHandler(sys.stdout))
-    log.setLevel(logging.INFO)
+    log.setLevel(logging.WARNING)
 
     # Avoid that pesky KeyboardInterrupt
     def sigint(_signal, _frame):
@@ -132,7 +133,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="Unsubscribe from Discourse threads easily"
     )
-    parser.add_argument("--debug", action="store_true", help="Enable debugging")
+    parser.add_argument("-d", "--debug", action="store_true", help="Enable debugging")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose logging"
+    )
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -154,6 +158,8 @@ def main():
     # Set log level
     if args.debug:
         log.setLevel(logging.DEBUG)
+    elif args.verbose:
+        log.setLevel(logging.INFO)
 
     # Setup queue in the cache dir, should be persistent enough. At least
     # better than TMP
