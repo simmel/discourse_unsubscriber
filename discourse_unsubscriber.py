@@ -29,7 +29,7 @@ __app__ = Path(sys.argv[0]).stem
 
 
 def client(
-    *,  # pylint: disable=bad-continuation
+    *,
     work: persistqueue.UniqueQ,
     status: persistqueue.SQLiteQueue,
     log: logging.Logger,
