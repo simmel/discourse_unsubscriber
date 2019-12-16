@@ -1,4 +1,4 @@
 persist-queue>=0.4
 xdg>=4.0
 mechanize>=0.4
-tenacity>=5.1
+backoff>=1.8

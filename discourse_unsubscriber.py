@@ -11,15 +11,16 @@ import logging
 import os
 import signal
 import sys
+import urllib
 from email.header import decode_header
 from email.message import EmailMessage
 from pathlib import Path
 
+import backoff
 import mechanize
 import persistqueue
 import persistqueue.serializers.json
 import xdg
-from tenacity import after_log, retry, wait_fixed
 
 __version__ = "0.0.0"
 
@@ -48,6 +49,7 @@ def client(
     # Remove any quoting like brackets
     unsubscribe_url = email.utils.unquote(header_as_str)
 
+    @backoff.on_exception(backoff.constant, persistqueue.exceptions.Empty, interval=3)
     def print_status(args: argparse.Namespace, status: persistqueue.SQLiteQueue):
         item = status.get(block=True, timeout=120)
         if args.debug:
@@ -96,7 +98,7 @@ def server(
         ),
     )
 
-    @retry(wait=wait_fixed(10), after=after_log(log, logging.INFO))
+    @backoff.on_exception(backoff.constant, urllib.error.HTTPError, interval=10)
     def unsubscribe(
         work: persistqueue.UniqueQ,
         status: persistqueue.SQLiteQueue,
