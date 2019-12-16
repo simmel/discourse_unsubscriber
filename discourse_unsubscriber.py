@@ -49,10 +49,11 @@ def client(
     unsubscribe_url = email.utils.unquote(header_as_str)
 
     def print_status(args: argparse.Namespace, status: persistqueue.SQLiteQueue):
+        item = status.get(block=True, timeout=120)
         if args.debug:
-            log.debug("{}: {}".format(os.getpid(), status.get()))
+            log.debug("{}: {}".format(os.getpid(), item))
         else:
-            print("\033[H{}: {}".format(os.getpid(), status.get()))
+            print("\033[H{}: {}".format(os.getpid(), item))
 
     def enqueue_work(work: persistqueue.UniqueQ, unsubscribe_url: str):
         work.put(unsubscribe_url)
